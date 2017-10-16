@@ -21,6 +21,6 @@ dependencies {
 ```
 
 # Reqiure dependencies
-NIO Socket TCP Client 1.0
-RxAndroid 2.0.1
-RxJava 2.1.3
+* NIO Socket TCP Client 1.0
+* RxAndroid 2.0.1
+* RxJava 2.1.3
