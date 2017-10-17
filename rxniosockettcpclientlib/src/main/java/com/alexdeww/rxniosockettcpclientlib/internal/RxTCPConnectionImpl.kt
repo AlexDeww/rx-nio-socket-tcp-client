@@ -11,6 +11,7 @@ import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class RxTCPConnectionImpl(host: String,
@@ -24,7 +25,7 @@ class RxTCPConnectionImpl(host: String,
     private val mNetworkClient: NIOSocketTCPClient = NIOSocketTCPClient(host, port, keepAlive,
             packetProtocol, packetSerializer, ConnectionCallbackEvent())
     private val mReceivedPacketEvent: PublishSubject<Packet> = PublishSubject.create()
-    private val mToSendPacketsPubs = HashMap<Packet, ObservableEmitter<Packet>>()
+    private val mToSendPacketsPubs = ConcurrentHashMap<Packet, ObservableEmitter<Packet>>()
 
     init { mNetworkClient.connect() }
 
