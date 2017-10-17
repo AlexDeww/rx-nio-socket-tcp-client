@@ -10,7 +10,6 @@ import com.alexdeww.rxniosockettcpclientlib.exceptions.SendPacketTimeout
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
