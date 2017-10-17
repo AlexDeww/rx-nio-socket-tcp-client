@@ -1,7 +1,7 @@
 # rx-nio-socket-tcp-client
 
 The Status of the lib: 
-[![Release](https://jitpack.io/v/alexdeww/rx-nio-socket-tcp-client.svg)](https://jitpack.io/#AlexDeww/rx-nio-socket-tcp-client/1.0)
+[![Release](https://jitpack.io/v/alexdeww/rx-nio-socket-tcp-client.svg)](https://jitpack.io/#AlexDeww/rx-nio-socket-tcp-client/1.1)
 
 How to use this lib in your project:
 ```gradle
@@ -16,7 +16,7 @@ allprojects {
 Add to your app module build.gradle
 ```gradle
 dependencies {
-        compile 'com.github.alexdeww:rx-nio-socket-tcp-client:1.0'
+        compile 'com.github.alexdeww:rx-nio-socket-tcp-client:1.1'
 }
 ```
 
