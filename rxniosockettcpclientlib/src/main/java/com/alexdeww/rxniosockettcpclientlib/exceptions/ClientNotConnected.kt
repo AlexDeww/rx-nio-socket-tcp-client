@@ -1,3 +1,3 @@
 package com.alexdeww.rxniosockettcpclientlib.exceptions
 
-class ClientNotConnected : RxConnectionException()
+class ClientNotConnected : RxConnectionException("Client not connected")

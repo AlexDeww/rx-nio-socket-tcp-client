@@ -1,3 +1,3 @@
 package com.alexdeww.rxniosockettcpclientlib.exceptions
 
-class Disconnected : RxConnectionException()
+class Disconnected : RxConnectionException("Disconnected")

@@ -8,7 +8,8 @@ import com.alexdeww.rxniosockettcpclientlib.exceptions.Disconnected
 import com.alexdeww.rxniosockettcpclientlib.exceptions.ErrorSendingPacket
 import com.alexdeww.rxniosockettcpclientlib.exceptions.SendPacketTimeout
 import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
+import io.reactivex.Single
+import io.reactivex.SingleEmitter
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -24,25 +25,25 @@ class RxTCPConnectionImpl(host: String,
     private val mNetworkClient: NIOSocketTCPClient = NIOSocketTCPClient(host, port, keepAlive,
             packetProtocol, packetSerializer, ConnectionCallbackEvent())
     private val mReceivedPacketEvent: PublishSubject<Packet> = PublishSubject.create()
-    private val mToSendPacketsPubs = ConcurrentHashMap<Packet, ObservableEmitter<Packet>>()
+    private val mToSendPacketsPubs = ConcurrentHashMap<Packet, SingleEmitter<Packet>>()
 
     init { mNetworkClient.connect() }
 
     override val receivedPacketEvent: Observable<Packet> = mReceivedPacketEvent
 
-    override fun sendPacket(packet: Packet): Observable<Packet> = sendPacketEx(packet, defRequestTimeout)
+    override fun sendPacket(packet: Packet): Single<Packet> = sendPacketEx(packet, defRequestTimeout)
 
-    override fun sendPacketEx(packet: Packet, requestTimeout: Long): Observable<Packet> = Observable.create<Packet> {
+    override fun sendPacketEx(packet: Packet, requestTimeout: Long): Single<Packet> = Single.create<Packet> {
         if (mNetworkClient.sendPacket(packet)) {
             mToSendPacketsPubs.put(packet, it)
         } else {
             throw ClientNotConnected()
         }
         it.setCancellable { mToSendPacketsPubs.remove(packet) }
-    }.timeout(requestTimeout, TimeUnit.SECONDS, Observable.fromCallable {
+    }.timeout(requestTimeout, TimeUnit.SECONDS, Single.error {
         mToSendPacketsPubs.remove(packet)
         throw SendPacketTimeout()
-    }).share()
+    })
 
     override fun disconnect() {
         if (mNetworkClient.disconnect()) doDisconnected()
@@ -68,8 +69,7 @@ class RxTCPConnectionImpl(host: String,
 
         override fun onPacketSent(client: NIOSocketTCPClient, packet: Packet) {
             val pub = mToSendPacketsPubs.remove(packet) ?: return
-            pub.onNext(packet)
-            pub.onComplete()
+            if (!pub.isDisposed) pub.onSuccess(packet)
         }
 
         override fun onPacketReceived(client: NIOSocketTCPClient, packet: Packet) {

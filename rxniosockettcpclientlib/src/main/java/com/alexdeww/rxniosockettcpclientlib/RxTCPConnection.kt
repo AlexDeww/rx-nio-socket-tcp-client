@@ -2,6 +2,7 @@ package com.alexdeww.rxniosockettcpclientlib
 
 import com.alexdeww.niosockettcpclientlib.common.Packet
 import io.reactivex.Observable
+import io.reactivex.Single
 
 interface RxTCPConnection {
 
@@ -21,7 +22,7 @@ interface RxTCPConnection {
      *
      * onError - emits if an error occurred(RxConnectionException)
      */
-    fun sendPacket(packet: Packet): Observable<Packet>
+    fun sendPacket(packet: Packet): Single<Packet>
 
     /**
      * Send packet to server with custom request timeout
@@ -30,7 +31,7 @@ interface RxTCPConnection {
      *
      * onError - emits if an error occurred(RxConnectionException)
      */
-    fun sendPacketEx(packet: Packet, requestTimeout: Long): Observable<Packet>
+    fun sendPacketEx(packet: Packet, requestTimeout: Long): Single<Packet>
 
     /**
      * Disconnect
