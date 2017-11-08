@@ -45,8 +45,8 @@ class RxTCPConnectionImpl(host: String,
         throw SendPacketTimeout()
     })
 
-    override fun disconnect() {
-        if (mNetworkClient.disconnect()) doDisconnected()
+    override fun disconnect(force: Boolean) {
+        if (force) mNetworkClient.forceDisconnect() else mNetworkClient.disconnect()
     }
 
     private fun doDisconnected() {
@@ -76,13 +76,13 @@ class RxTCPConnectionImpl(host: String,
             mReceivedPacketEvent.onNext(packet)
         }
 
-        override fun onError(client: NIOSocketTCPClient, clientState: ClientState, message: String, packet: Packet?) {
+        override fun onError(client: NIOSocketTCPClient, clientState: ClientState, packet: Packet?, error: Throwable?) {
             when (clientState) {
-                ClientState.CONNECTING -> connectionListener.onConnectionError(message)
+                ClientState.CONNECTING -> connectionListener.onConnectionError(error)
                 ClientState.SENDING -> {
                     if (packet == null) return
                     val pub = mToSendPacketsPubs.remove(packet) ?: return
-                    if (!pub.isDisposed) pub.onError(ErrorSendingPacket(message))
+                    if (!pub.isDisposed) pub.onError(ErrorSendingPacket(error))
                 }
                 else -> {  }
             }
@@ -91,7 +91,7 @@ class RxTCPConnectionImpl(host: String,
 
     interface ConnectionListener {
         fun onConnected(rxConnection: RxTCPConnection)
-        fun onConnectionError(msg: String)
+        fun onConnectionError(error: Throwable?)
     }
 
 }

@@ -36,5 +36,5 @@ interface RxTCPConnection {
     /**
      * Disconnect
      */
-    fun disconnect()
+    fun disconnect(force: Boolean = false)
 }

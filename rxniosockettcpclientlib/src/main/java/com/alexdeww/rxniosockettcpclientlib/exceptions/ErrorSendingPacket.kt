@@ -1,3 +1,3 @@
 package com.alexdeww.rxniosockettcpclientlib.exceptions
 
-class ErrorSendingPacket(message: String) : RxConnectionException(message)
+class ErrorSendingPacket(cause: Throwable? = null) : RxConnectionException(cause = cause)

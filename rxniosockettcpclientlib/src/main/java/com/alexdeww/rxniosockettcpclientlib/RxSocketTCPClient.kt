@@ -18,13 +18,13 @@ class RxSocketTCPClient(private val host: String,
                 RxTCPConnectionImpl(host, port, keepAlive, packetProtocol, packetSerializer, defRequestTimeout, object : RxTCPConnectionImpl.ConnectionListener {
                     override fun onConnected(rxConnection: RxTCPConnection) {
                         if (obs.isDisposed) {
-                            rxConnection.disconnect()
+                            rxConnection.disconnect(true)
                         } else {
                             obs.onSuccess(rxConnection)
                         }
                     }
-                    override fun onConnectionError(msg: String) {
-                        if (!obs.isDisposed) obs.onError(ConnectionError(msg))
+                    override fun onConnectionError(error: Throwable?) {
+                        if (!obs.isDisposed) obs.onError(ConnectionError(error))
                     }
                 })
             }
