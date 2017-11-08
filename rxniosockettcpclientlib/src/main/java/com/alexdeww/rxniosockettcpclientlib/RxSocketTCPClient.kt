@@ -1,9 +1,8 @@
 package com.alexdeww.rxniosockettcpclientlib
 
-import com.alexdeww.niosockettcpclientlib.common.PacketProtocol
-import com.alexdeww.niosockettcpclientlib.common.PacketSerializer
+import com.alexdeww.niosockettcpclientlib.PacketProtocol
+import com.alexdeww.niosockettcpclientlib.PacketSerializer
 import com.alexdeww.rxniosockettcpclientlib.exceptions.ConnectionError
-import com.alexdeww.rxniosockettcpclientlib.internal.RxTCPConnectionImpl
 import io.reactivex.Single
 
 class RxSocketTCPClient(private val host: String,
@@ -23,6 +22,7 @@ class RxSocketTCPClient(private val host: String,
                             obs.onSuccess(rxConnection)
                         }
                     }
+
                     override fun onConnectionError(error: Throwable?) {
                         if (!obs.isDisposed) obs.onError(ConnectionError(error))
                     }

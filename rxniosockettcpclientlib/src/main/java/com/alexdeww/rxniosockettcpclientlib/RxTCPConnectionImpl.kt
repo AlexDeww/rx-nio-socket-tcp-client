@@ -1,12 +1,7 @@
-package com.alexdeww.rxniosockettcpclientlib.internal
+package com.alexdeww.rxniosockettcpclientlib
 
-import com.alexdeww.niosockettcpclientlib.NIOSocketTCPClient
-import com.alexdeww.niosockettcpclientlib.common.*
-import com.alexdeww.rxniosockettcpclientlib.RxTCPConnection
-import com.alexdeww.rxniosockettcpclientlib.exceptions.ClientNotConnected
-import com.alexdeww.rxniosockettcpclientlib.exceptions.Disconnected
-import com.alexdeww.rxniosockettcpclientlib.exceptions.ErrorSendingPacket
-import com.alexdeww.rxniosockettcpclientlib.exceptions.SendPacketTimeout
+import com.alexdeww.niosockettcpclientlib.*
+import com.alexdeww.rxniosockettcpclientlib.exceptions.*
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
@@ -14,13 +9,13 @@ import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
-class RxTCPConnectionImpl(host: String,
-                          port: Int,
-                          keepAlive: Boolean,
-                          packetProtocol: PacketProtocol,
-                          packetSerializer: PacketSerializer,
-                          private val defRequestTimeout: Long = 10,
-                          private val connectionListener: ConnectionListener) : RxTCPConnection {
+internal class RxTCPConnectionImpl(host: String,
+                                   port: Int,
+                                   keepAlive: Boolean,
+                                   packetProtocol: PacketProtocol,
+                                   packetSerializer: PacketSerializer,
+                                   private val defRequestTimeout: Long = 10,
+                                   private val connectionListener: ConnectionListener) : RxTCPConnection {
 
     private val mNetworkClient: NIOSocketTCPClient = NIOSocketTCPClient(host, port, keepAlive,
             packetProtocol, packetSerializer, ConnectionCallbackEvent())

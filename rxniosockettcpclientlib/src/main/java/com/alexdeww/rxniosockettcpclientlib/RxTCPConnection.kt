@@ -1,6 +1,6 @@
 package com.alexdeww.rxniosockettcpclientlib
 
-import com.alexdeww.niosockettcpclientlib.common.Packet
+import com.alexdeww.niosockettcpclientlib.Packet
 import io.reactivex.Observable
 import io.reactivex.Single
 
