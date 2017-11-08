@@ -1,6 +1,7 @@
 package com.alexdeww.rxniosockettcpclientlib
 
 import com.alexdeww.niosockettcpclientlib.Packet
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -36,5 +37,7 @@ interface RxTCPConnection {
     /**
      * Disconnect
      */
-    fun disconnect(force: Boolean = false)
+    fun disconnect(): Completable
+
+    fun disconnectNow()
 }

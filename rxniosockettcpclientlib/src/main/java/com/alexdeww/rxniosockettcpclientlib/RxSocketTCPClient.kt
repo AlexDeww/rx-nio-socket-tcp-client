@@ -2,7 +2,6 @@ package com.alexdeww.rxniosockettcpclientlib
 
 import com.alexdeww.niosockettcpclientlib.PacketProtocol
 import com.alexdeww.niosockettcpclientlib.PacketSerializer
-import com.alexdeww.rxniosockettcpclientlib.exceptions.ConnectionError
 import io.reactivex.Single
 
 class RxSocketTCPClient(private val host: String,
@@ -14,19 +13,12 @@ class RxSocketTCPClient(private val host: String,
 
     fun createConnectionRequest(): Single<RxTCPConnection> =
             Single.create<RxTCPConnection> { obs ->
-                RxTCPConnectionImpl(host, port, keepAlive, packetProtocol, packetSerializer, defRequestTimeout, object : RxTCPConnectionImpl.ConnectionListener {
-                    override fun onConnected(rxConnection: RxTCPConnection) {
-                        if (obs.isDisposed) {
-                            rxConnection.disconnect(true)
-                        } else {
-                            obs.onSuccess(rxConnection)
-                        }
-                    }
-
-                    override fun onConnectionError(error: Throwable?) {
-                        if (!obs.isDisposed) obs.onError(ConnectionError(error))
-                    }
-                })
+                RxTCPConnectionImpl(host, port, keepAlive, packetProtocol, packetSerializer, defRequestTimeout)
+                        .connect()
+                        .subscribe(
+                                { if (obs.isDisposed) it.disconnectNow() else obs.onSuccess(it) },
+                                { if (!obs.isDisposed) obs.onError(it) }
+                        )
             }
 
 }
