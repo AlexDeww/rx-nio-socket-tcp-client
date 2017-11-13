@@ -65,7 +65,7 @@ internal class RxTCPConnectionImpl(host: String,
     private fun doDisconnected() {
         mToSendPacketsPubs.forEach {
             val pub = it.value
-            if (!pub.isDisposed) it.value.onError(Disconnected())
+            if (!pub.isDisposed) it.value.tryOnError(Disconnected())
         }
         mToSendPacketsPubs.clear()
         mReceivedPacketEvent.onComplete()
@@ -108,7 +108,7 @@ internal class RxTCPConnectionImpl(host: String,
                 ClientState.SENDING -> {
                     if (packet == null) return
                     val pub = mToSendPacketsPubs.remove(packet) ?: return
-                    if (!pub.isDisposed) pub.onError(ErrorSendingPacket(error))
+                    if (!pub.isDisposed) pub.tryOnError(ErrorSendingPacket(error))
                 }
                 else -> {  }
             }
