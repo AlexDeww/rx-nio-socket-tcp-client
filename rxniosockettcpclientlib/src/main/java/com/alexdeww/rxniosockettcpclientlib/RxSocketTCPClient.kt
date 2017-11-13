@@ -17,7 +17,7 @@ class RxSocketTCPClient(private val host: String,
                         .connect()
                         .subscribe(
                                 { if (obs.isDisposed) it.disconnectNow() else obs.onSuccess(it) },
-                                { if (!obs.isDisposed) obs.onError(it) }
+                                { if (!obs.isDisposed) obs.tryOnError(it) }
                         )
             }
 
