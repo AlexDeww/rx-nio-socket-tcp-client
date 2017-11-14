@@ -39,7 +39,7 @@ internal class RxTCPConnectionImpl(host: String,
         it.setCancellable { mToSendPacketsPubs.remove(packet) }
     }.timeout(requestTimeout, TimeUnit.SECONDS, Single.error {
         mToSendPacketsPubs.remove(packet)
-        throw SendPacketTimeout()
+        SendPacketTimeout()
     })
 
     override fun disconnect(): Completable {
