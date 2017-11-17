@@ -31,9 +31,9 @@ internal class RxTCPConnectionImpl(host: String,
     override fun sendPacket(packet: Packet): Single<Packet> = sendPacketEx(packet, defRequestTimeout)
 
     override fun sendPacketEx(packet: Packet, requestTimeout: Long): Single<Packet> = Single.create<Packet> {
-        if (mNetworkClient.sendPacket(packet)) {
-            mToSendPacketsPubs.put(packet, it)
-        } else {
+        mToSendPacketsPubs.put(packet, it)
+        if (!mNetworkClient.sendPacket(packet)) {
+            mToSendPacketsPubs.remove(packet)
             throw ClientNotConnected()
         }
         it.setCancellable { mToSendPacketsPubs.remove(packet) }
@@ -95,7 +95,7 @@ internal class RxTCPConnectionImpl(host: String,
 
         override fun onPacketSent(client: NIOSocketTCPClient, packet: Packet) {
             val pub = mToSendPacketsPubs.remove(packet) ?: return
-            if (!pub.isDisposed) pub.onSuccess(packet)
+            pub.onSuccess(packet)
         }
 
         override fun onPacketReceived(client: NIOSocketTCPClient, packet: Packet) {
