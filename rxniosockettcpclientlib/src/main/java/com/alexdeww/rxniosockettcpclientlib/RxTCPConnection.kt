@@ -1,11 +1,10 @@
 package com.alexdeww.rxniosockettcpclientlib
 
-import com.alexdeww.niosockettcpclientlib.Packet
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 
-interface RxTCPConnection {
+interface RxTCPConnection<PACKET> {
 
     /**
      * onNext - emits for each incoming packet from server
@@ -14,7 +13,7 @@ interface RxTCPConnection {
      *
      * onError - never emits
      */
-    val receivedPacketEvent: Observable<Packet>
+    val receivedPacketEvent: Observable<PACKET>
 
     /**
      * Send packet to server with default request timeout(10 sec)
@@ -23,7 +22,7 @@ interface RxTCPConnection {
      *
      * onError - emits if an error occurred(RxConnectionException)
      */
-    fun sendPacket(packet: Packet): Single<Packet>
+    fun sendPacket(packet: PACKET): Single<PACKET>
 
     /**
      * Send packet to server with custom request timeout
@@ -32,7 +31,7 @@ interface RxTCPConnection {
      *
      * onError - emits if an error occurred(RxConnectionException)
      */
-    fun sendPacketEx(packet: Packet, requestTimeout: Long): Single<Packet>
+    fun sendPacketEx(packet: PACKET, requestTimeout: Long): Single<PACKET>
 
     /**
      * Disconnect
