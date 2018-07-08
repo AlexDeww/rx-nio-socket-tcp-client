@@ -1,6 +1,9 @@
 package com.alexdeww.rxniosockettcpclientlib
 
 import com.alexdeww.niosockettcpclientlib.*
+import com.alexdeww.niosockettcpclientlib.additional.NIOSocketPacketHandler
+import com.alexdeww.niosockettcpclientlib.additional.NIOSocketPacketProtocol
+import com.alexdeww.niosockettcpclientlib.additional.NIOSocketSerializer
 import com.alexdeww.rxniosockettcpclientlib.exceptions.*
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -16,103 +19,109 @@ internal class RxTCPConnectionImpl<PACKET>(
         host: String,
         port: Int,
         keepAlive: Boolean,
-        packetProtocol: PacketProtocol<PACKET>,
+        packetProtocol: NIOSocketPacketProtocol,
+        packetSerializer: NIOSocketSerializer<PACKET>,
         private val defRequestTimeout: Long = 10
 ) : RxTCPConnection<PACKET> {
 
-    private val mNetworkClient = NIOSocketTCPClient(host, port, keepAlive, packetProtocol, ConnectionCallbackEvent())
-    private val mReceivedPacketEvent: PublishSubject<PACKET> = PublishSubject.create()
-    private val mToSendPacketsPubs = ConcurrentHashMap<PACKET, SingleEmitter<PACKET>>()
-    private var mConnectionSubj: SingleSubject<RxTCPConnection<PACKET>>? = null
-    private var mDisconnectionSubj: CompletableSubject? = null
+    private val tcpSocketClient = NIOSocketTCPClient(host, port, keepAlive, SocketHandler(packetProtocol, packetSerializer))
+    private val _receivedPacketEvent: PublishSubject<PACKET> = PublishSubject.create()
+    private val toSendPacketsPubs = ConcurrentHashMap<PACKET, SingleEmitter<PACKET>>()
+    private var connectionSubj: SingleSubject<RxTCPConnection<PACKET>>? = null
+    private var disconnectionSubj: CompletableSubject? = null
 
-    override val receivedPacketEvent: Observable<PACKET> = mReceivedPacketEvent
+    override val receivedPacketEvent: Observable<PACKET> = _receivedPacketEvent
 
     override fun sendPacket(packet: PACKET): Single<PACKET> = sendPacketEx(packet, defRequestTimeout)
 
     override fun sendPacketEx(packet: PACKET, requestTimeout: Long): Single<PACKET> = Single.create<PACKET> {
-        mToSendPacketsPubs[packet] = it
-        if (!mNetworkClient.sendPacket(packet)) {
-            mToSendPacketsPubs.remove(packet)
+        toSendPacketsPubs[packet] = it
+        if (!tcpSocketClient.sendData(packet)) {
+            toSendPacketsPubs.remove(packet)
             throw ClientNotConnected()
         }
-        it.setCancellable { mToSendPacketsPubs.remove(packet) }
+        it.setCancellable { toSendPacketsPubs.remove(packet) }
     }.timeout(requestTimeout, TimeUnit.SECONDS, Single.error {
-        mToSendPacketsPubs.remove(packet)
+        toSendPacketsPubs.remove(packet)
         SendPacketTimeout()
     })
 
     override fun disconnect(): Completable {
-        if (!mNetworkClient.isConnected) return Completable.complete()
-        if (mDisconnectionSubj != null) return mDisconnectionSubj!!
+        if (!tcpSocketClient.isConnected) return Completable.complete()
+        if (disconnectionSubj != null) return disconnectionSubj!!
 
-        mDisconnectionSubj = CompletableSubject.create()
-        return mDisconnectionSubj!!.doOnSubscribe { mNetworkClient.disconnect() }
+        disconnectionSubj = CompletableSubject.create()
+        return disconnectionSubj!!.doOnSubscribe { tcpSocketClient.disconnect() }
     }
 
     override fun disconnectNow() {
-        mNetworkClient.forceDisconnect()
+        tcpSocketClient.forceDisconnect()
     }
 
     fun connect(): Single<RxTCPConnection<PACKET>> {
-        if (mNetworkClient.isConnected) return Single.just(this)
-        if (mConnectionSubj != null) return mConnectionSubj!!
+        if (tcpSocketClient.isConnected) return Single.just(this)
+        if (connectionSubj != null) return connectionSubj!!
 
-        mConnectionSubj = SingleSubject.create()
-        return mConnectionSubj!!.doOnSubscribe { mNetworkClient.connect() }
+        connectionSubj = SingleSubject.create()
+        return connectionSubj!!.doOnSubscribe { tcpSocketClient.connect() }
     }
 
     private fun doDisconnected() {
-        mToSendPacketsPubs.forEach {
+        toSendPacketsPubs.forEach {
             val pub = it.value
             if (!pub.isDisposed) it.value.tryOnError(Disconnected())
         }
-        mToSendPacketsPubs.clear()
-        mReceivedPacketEvent.onComplete()
+        toSendPacketsPubs.clear()
+        _receivedPacketEvent.onComplete()
 
-        val ds = mDisconnectionSubj ?: return
-        mDisconnectionSubj = null
+        val ds = disconnectionSubj ?: return
+        disconnectionSubj = null
         ds.onComplete()
     }
 
     private fun doConnectionResult(isError: Boolean, error: Throwable? = null) {
-        val cs = mConnectionSubj ?: return
-        mConnectionSubj = null
+        val cs = connectionSubj ?: return
+        connectionSubj = null
         if (!isError)
             cs.onSuccess(this)
         else
             cs.onError(error!!)
     }
 
-    private inner class ConnectionCallbackEvent : CallbackEvents<PACKET> {
+    private inner class SocketHandler(
+            protocol: NIOSocketPacketProtocol,
+            serializer: NIOSocketSerializer<PACKET>
+    ) : NIOSocketPacketHandler<PACKET>(protocol, serializer) {
+
         override fun onConnected(client: NIOSocketTCPClient<PACKET>) {
+            super.onConnected(client)
             doConnectionResult(false)
         }
 
         override fun onDisconnected(client: NIOSocketTCPClient<PACKET>) {
+            super.onDisconnected(client)
             doDisconnected()
         }
 
-        override fun onPacketSent(client: NIOSocketTCPClient<PACKET>, packet: PACKET) {
-            val pub = mToSendPacketsPubs.remove(packet) ?: return
-            pub.onSuccess(packet)
+        override fun onDataSent(client: NIOSocketTCPClient<PACKET>, data: PACKET) {
+            toSendPacketsPubs.remove(data)?.onSuccess(data)
         }
 
-        override fun onPacketReceived(client: NIOSocketTCPClient<PACKET>, packet: PACKET) {
-            mReceivedPacketEvent.onNext(packet)
+        override fun onDataReceived(client: NIOSocketTCPClient<PACKET>, data: PACKET) {
+            _receivedPacketEvent.onNext(data)
         }
 
-        override fun onError(client: NIOSocketTCPClient<PACKET>, clientState: ClientState, packet: PACKET?, error: Throwable?) {
+        override fun onError(client: NIOSocketTCPClient<PACKET>, clientState: NIOSocketClientState, data: PACKET?, error: Throwable?) {
             when (clientState) {
-                ClientState.CONNECTING -> doConnectionResult(true, ConnectionError(error))
-                ClientState.SENDING -> {
-                    if (packet == null) return
-                    val pub = mToSendPacketsPubs.remove(packet) ?: return
-                    if (!pub.isDisposed) pub.tryOnError(ErrorSendingPacket(error))
+                NIOSocketClientState.CONNECTING -> doConnectionResult(true, ConnectionError(error))
+                NIOSocketClientState.SENDING -> {
+                    if (data == null) return
+                    toSendPacketsPubs.remove(data)?.also { if (!it.isDisposed) it.tryOnError(ErrorSendingPacket(error)) }
                 }
                 else -> {  }
             }
         }
+
     }
 
 }
