@@ -36,7 +36,7 @@ interface RxTCPConnection<PACKET> {
     /**
      * Disconnect
      */
-    fun disconnect(): Completable
+    fun close(): Completable
 
-    fun disconnectNow()
+    fun closeNow()
 }
