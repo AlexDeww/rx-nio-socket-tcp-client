@@ -16,11 +16,12 @@ allprojects {
 Add to your app module build.gradle
 ```gradle
 dependencies {
-        compile 'com.github.alexdeww:rx-nio-socket-tcp-client:3.0'
+        implementation 'com.github.AlexDeww:nio-socket-tcp-client:4.2.4'
+        implementation 'com.github.alexdeww:rx-nio-socket-tcp-client:3.0'
 }
 ```
 
 # require dependencies
-* NIO Socket TCP Client 3.0.2
+* NIO Socket TCP Client 4.2.4
 * RxAndroid 2.0.2
 * RxJava 2.1.12
