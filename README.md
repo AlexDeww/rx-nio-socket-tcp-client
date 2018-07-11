@@ -17,7 +17,7 @@ Add to your app module build.gradle
 ```gradle
 dependencies {
         implementation 'com.github.AlexDeww:nio-socket-tcp-client:4.2.4'
-        implementation 'com.github.alexdeww:rx-nio-socket-tcp-client:3.0'
+        implementation 'com.github.alexdeww:rx-nio-socket-tcp-client:last_version'
 }
 ```
 
