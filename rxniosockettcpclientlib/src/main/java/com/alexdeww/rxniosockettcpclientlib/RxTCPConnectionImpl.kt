@@ -30,7 +30,7 @@ internal class RxTCPConnectionImpl<PACKET>(
     private class SendPacketResult<PACKET>(
             val packet: PACKET,
             var emitter: SingleEmitter<PACKET>?
-    ) : NIOSocketOperationResult {
+    ) : NIOSocketOperationResult() {
         override fun onComplete() {
             emitter?.onSuccess(packet)
         }
@@ -51,7 +51,10 @@ internal class RxTCPConnectionImpl<PACKET>(
     override fun sendPacketEx(packet: PACKET, requestTimeout: Long): Single<PACKET> = Single.create<PACKET> {
         val sendPacketResult = SendPacketResult(packet, it)
         if (!super.sendPacket(packet, sendPacketResult)) throw ClientNotConnected()
-        it.setCancellable { sendPacketResult.emitter = null }
+        it.setCancellable {
+            sendPacketResult.cancel()
+            sendPacketResult.emitter = null
+        }
     }.timeout(requestTimeout, TimeUnit.SECONDS, Single.error { SendPacketTimeout() })
 
     override fun close(): Completable {
