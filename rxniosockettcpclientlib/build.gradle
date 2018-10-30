@@ -4,12 +4,12 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.AlexDeww'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
@@ -26,9 +26,9 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    api "io.reactivex.rxjava2:rxandroid:2.0.2"
-    api "io.reactivex.rxjava2:rxjava:2.1.12"
-    api 'com.github.AlexDeww:nio-socket-tcp-client:4.2.4'
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
+    implementation "io.reactivex.rxjava2:rxjava:2.1.16"
+    implementation 'com.github.AlexDeww:nio-socket-tcp-client:4.2.5'
 }
 
 repositories {
